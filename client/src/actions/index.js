@@ -8,3 +8,12 @@ export const fetchUser = () => async dispatch => {
     payload: user.data
   });
 };
+
+export const handleToken = token => async dispatch => {
+  console.log("handleToken : ", token);
+  const user = await axios.post("/auth/addcredits", token);
+  dispatch({
+    type: FETCH_USER,
+    payload: user.data
+  });
+};
