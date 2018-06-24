@@ -28,18 +28,10 @@ mongoose.connect(keys.mongoURI);
 const surveyRoutes = require("./routes/surveyRoutes");
 const authRoutes = require("./routes/authRoutes");
 
-console.log(authRoutes);
-console.log(surveyRoutes);
-
 const PORT = process.env.PORT || 5000;
 
 app.use("/survey", surveyRoutes);
 app.use("/auth", authRoutes);
-
-console.log("Print all routes");
-app._router.stack.forEach(element => {
-  console.log(element);
-});
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static("client/build"));
