@@ -6,6 +6,10 @@ const stripe = require("stripe")(keys.stripeSecretKey);
 const requireLogin = require("../middlewares/requireLogin");
 const router = express.Router();
 
+const { URL } = require("url");
+const Path = require("path-parser").default;
+const _ = require("lodash");
+
 const mongoose = require("mongoose");
 const Survey = mongoose.model("surveys");
 const Mailer = require("../services/Mailer");
@@ -46,6 +50,44 @@ router.post("/addcredits", requireLogin, async (req, res) => {
   req.user.credits += 5;
   const user = await req.user.save();
   res.send(user);
+});
+
+router.get("/surveys/:surveyId/:choice", (req, res) => {
+  res.send("Thank you for taking time to respond to the survey");
+});
+
+router.post("/surveys/webhooks", (req, res) => {
+  const p = new Path("/auth/surveys/:surveyID/:choice");
+  const events = _
+    .chain(req.body)
+    .map(({ email, url }) => {
+      const match = p.test(new URL(url).pathname);
+      if (match) {
+        return { email, ...match };
+      }
+    })
+    .compact()
+    .uniqBy("email", "surveyID")
+    .each(({ surveyID, email, choice }) => {
+      Survey.updateOne(
+        {
+          _id: surveyID,
+          recipients: {
+            $elemMatch: {
+              email: email,
+              responded: false
+            }
+          }
+        },
+        {
+          $inc: { [choice]: 1 },
+          $set: { "recipients.$.responded": true },
+          lastResponded: new Date()
+        }
+      ).exec();
+    })
+    .value();
+  res.send({});
 });
 
 router.post("/survey", requireLogin, async (req, res) => {
