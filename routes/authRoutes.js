@@ -100,6 +100,7 @@ router.post("/survey", requireLogin, async (req, res) => {
     subject,
     body,
     recipients: recipients.split(",").map(email => ({ email: email.trim() })),
+    _user: req.user.id,
     dateSent: Date.now()
   });
   const mailer = new Mailer(survey, surveyTemplate(survey));
@@ -113,6 +114,15 @@ router.post("/survey", requireLogin, async (req, res) => {
     console.log(err);
     res.status(422).send(err);
   }
+});
+
+router.get("/surveys", requireLogin, async (req, res) => {
+  console.log(req.user.id);
+  const surveys = await Survey.find({ _user: req.user.id }).select({
+    recipients: false
+  });
+  console.log(surveys);
+  res.send(surveys);
 });
 
 module.exports = router;

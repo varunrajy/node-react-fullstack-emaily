@@ -21,8 +21,10 @@ router.post("/survey/new", requireLogin, async (req, res) => {
     subject,
     body,
     recipients: recipients.split(",").map(email => ({ email: email.trim() })),
+    _user: req.user.id,
     dateSent: Date.now()
   });
+  console.log(survey);
   const mailer = new Mailer(survey, surveyTemplate(survey));
   try {
     await mailer.send();
